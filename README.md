@@ -1,4 +1,4 @@
-# monad
+# Monad Testnet
 auto tx monad
 
 How It Works:
