@@ -13,7 +13,7 @@
 
 1️⃣ **Clone the Repository**  
 ```sh
-git clone https://github.com/kontia1/monad.git && cd monad-bot
+git clone https://github.com/kontia1/monad.git && cd monad
 ```
 
 
