@@ -9,9 +9,8 @@ export async function wrapMON(wallet, amount) {
     try {
         console.log(`[${wallet.address}] Wrapping ${ethers.formatEther(amount)} MON...`);
         const tx = await contract.deposit({ value: amount, gasLimit: 45000 });
-        console.log(`Transaction sent: ${EXPLORER_URL}${tx.hash}`);
+        console.log(`Wrapping successful! Transaction: ${EXPLORER_URL}${tx.hash}`);
         await tx.wait();
-        console.log("Wrap successful!");
     } catch (error) {
         console.error("Wrap failed:", error);
     }
@@ -22,9 +21,8 @@ export async function unwrapMON(wallet, amount) {
     try {
         console.log(`[${wallet.address}] Unwrapping ${ethers.formatEther(amount)} WMON...`);
         const tx = await contract.withdraw(amount, { gasLimit: 45000 });
-        console.log(`Transaction sent: ${EXPLORER_URL}${tx.hash}`);
+        console.log(`Unwrapping successful! Transaction: ${EXPLORER_URL}${tx.hash}`);
         await tx.wait();
-        console.log("Unwrap successful!");
     } catch (error) {
         console.error("Unwrap failed:", error);
     }
