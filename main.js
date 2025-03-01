@@ -40,7 +40,7 @@ async function executeOperations(wallet) {
 
     // Select two random tokens for swapping
     const selectedTokens = [];
-    while (selectedTokens.length < 2) {
+    while (selectedTokens.length < 4) {
         const token = TOKEN_ADDRESSES[Math.floor(Math.random() * TOKEN_ADDRESSES.length)];
         if (!selectedTokens.includes(token)) {
             selectedTokens.push(token);
@@ -92,6 +92,21 @@ async function repeatMain() {
         const delayMs = delayMinutes * 60 * 1000;
         
         console.log(`Waiting for ${delayMinutes} minutes before the next cycle...`);
+        for (let i = delayMinutes; i > 0; i--) {
+            for (let j = 59; j >= 0; j--) {
+                process.stdout.clearLine(0);
+                process.stdout.cursorTo(0);
+                process.stdout.write(`Time remaining: ${i} minutes ${j} seconds `);
+                await delay(1000);
+            }
+        }
+        console.log('Continuing to next cycle...');
+        for (let i = delayMinutes; i > 0; i--) {
+            process.stdout.write(`
+Time remaining: ${i} minutes `);
+            await delay(60000);
+        }
+        console.log('Resuming execution...');
         await delay(delayMs);
     }
 }
