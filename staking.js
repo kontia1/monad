@@ -14,7 +14,7 @@ const gasLimits = {
   aprioStake: 85000, aprioUnstake: 160000, 
   magmaStake: 95000, magmaUnstake: 105000,
   kintsuStake: 110000, kintsuUnstake: 100000,
-  shmonStake: 55000, shmonUnstake: 65000
+  shmonStake: 65000, shmonUnstake: 75000
 };
 
 const getRandomAmount = (min, max) => ethers.parseEther((Math.random() * (max - min) + min).toFixed(6));
