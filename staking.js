@@ -11,8 +11,8 @@ const MAGMA_CONTRACT = "0x2c9C959516e9AAEdB2C748224a41249202ca8BE7";
 const web3 = new Web3(RPC_URL);
 
 const gasLimits = { 
-  aprioStake: 75000, aprioUnstake: 160000, 
-  magmaStake: 85000, magmaUnstake: 95000,
+  aprioStake: 85000, aprioUnstake: 160000, 
+  magmaStake: 95000, magmaUnstake: 105000,
   kintsuStake: 110000, kintsuUnstake: 100000,
   shmonStake: 55000, shmonUnstake: 65000
 };
