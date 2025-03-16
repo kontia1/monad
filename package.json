@@ -1,13 +1,8 @@
 {
-  "name": "monad-bot",
-  "version": "1.0.0",
-  "description": "Automated bot for wrapping, swapping, and staking MON tokens",
-  "main": "main.js",
-  "scripts": {
-    "start": "node main.js"
-  },
+  "type": "module",
   "dependencies": {
-    "ethers": "^6.6.0",
-    "fs": "0.0.1-security"
+    "ethers": "^6.13.5",
+    "fs": "^0.0.1-security",
+    "web3": "^4.16.0"
   }
 }
