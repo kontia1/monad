@@ -1,114 +1,87 @@
-import { ethers } from "ethers";
+import { Wallet, JsonRpcProvider, ethers } from "ethers";
 import fs from "fs";
-import { wrapMON, unwrapMON, swapEthForTokens, getRandomAmount, delay } from "./swap.js";
-import { stakeAprioMON, requestUnstakeAprMON, stakeMagmaMON, unstakeMagmaMON, stakeKintsuMON, unstakeKintsuMON } from "./staking.js";
-import { RPC_URL, CONTRACTS } from "./config.js";
+import { provider, delay, getRandomAmount } from "./config.js";
+import { wrapMON, unwrapMON, swapUniswap, swapTaya } from "./swap.js";
+import { stakeMagmaMON, unstakeMagmaMON, stakeAprioMON, requestUnstakeAprMON, stakeKintsuMON, unstakeKintsuMON, stakeSHMonad, unstakeSHMonad } from "./staking.js";
 
-const provider = new ethers.JsonRpcProvider(RPC_URL);
-const PRIVATE_KEYS = fs.readFileSync("wallet.txt", "utf8").trim().split("\n");
-if (PRIVATE_KEYS.length === 0) throw new Error("No Private Keys found in wallet.txt");
+// Load private keys from wallet.txt
+const privateKeys = fs.readFileSync("wallet.txt", "utf8")
+    .trim()
+    .split("\n")
+    .map(pk => pk.startsWith("0x") ? pk : "0x" + pk);
 
-const wallets = PRIVATE_KEYS.map(key => new ethers.Wallet(key, provider));
-const TOKEN_ADDRESSES = Object.entries(CONTRACTS.TOKENS).map(([symbol, address]) => ({ symbol, address }));
-const STAKE_CONTRACT = "0xb2f82D0f38dc453D596Ad40A37799446Cc89274A";
-const MAGMA_CONTRACT = "0x2c9C959516e9AAEdB2C748224a41249202ca8BE7";
-const MON_CONTRACT = CONTRACTS.WMON;
-
-let dayCounter = (new Date().getDate() % 3) + 1; // Keeps track of the 3-day cycle
-
-async function getWalletBalances() {
-    console.log("\nWallet Balances (MON):");
-    for (const wallet of wallets) {
-        const balance = await provider.getBalance(wallet.address);
-        console.log(`[${wallet.address}] Balance: ${ethers.formatEther(balance)} MON`);
-    }
-}
-
-async function executeOperations(wallet) {
-    console.clear();
-    console.log(`\n======================`);
-    console.log(`DAY ${dayCounter} EXECUTION - ${wallet.address}`);
-    console.log(`======================\n`);
-
-    // Wrap & Unwrap MON
-    console.log(`\n[${wallet.address}] Wrapping & Unwrapping MON...`);
-    const wrapAmount = getRandomAmount(0.0005, 0.001);
-    await wrapMON(wallet, wrapAmount);
-    await delay(10000);
-    await unwrapMON(wallet, wrapAmount);
-    await delay(10000);
-
-    // Select two random tokens for swapping
-    const selectedTokens = [];
-    while (selectedTokens.length < 4) {
-        const token = TOKEN_ADDRESSES[Math.floor(Math.random() * TOKEN_ADDRESSES.length)];
-        if (!selectedTokens.includes(token)) {
-            selectedTokens.push(token);
-        }
-    }
-
-    // Swap for selected tokens
-    console.log(`\n[${wallet.address}] Swapping MON for tokens...`);
-    for (const token of selectedTokens) {
-        await swapEthForTokens(wallet, token);
-        await delay(10000);
-    }
-
-    // Staking Operations based on the current day
-    if (dayCounter === 1) {
-        console.log(`\n[${wallet.address}] Staking/Unstaking Aprio MON...`);
-        await stakeAprioMON(wallet, STAKE_CONTRACT);
-        await delay(10000);
-        await requestUnstakeAprMON(wallet, STAKE_CONTRACT);
-    } else if (dayCounter === 2) {
-        console.log(`\n[${wallet.address}] Staking/Unstaking Magma MON...`);
-        await stakeMagmaMON(wallet, MAGMA_CONTRACT);
-        await delay(10000);
-        await unstakeMagmaMON(wallet, MAGMA_CONTRACT);
-    } else {
-        console.log(`\n[${wallet.address}] Staking/Unstaking Kintsu MON...`);
-        await stakeKintsuMON(wallet);
-        await delay(10000);
-        await unstakeKintsuMON(wallet);
-    }
-}
+const wallets = privateKeys.map(pk => new Wallet(pk, provider));
 
 async function main() {
-    for (const wallet of wallets) {
-        await executeOperations(wallet);
-    }
-    console.log("All wallet operations completed!");
-    dayCounter = (dayCounter % 3) + 1; // Increment and loop back to Day 1 after Day 3
-    await getWalletBalances();
-}
-
-async function repeatMain() {
-    while (true) {
-        console.log("Starting a new execution cycle...");
-        await main();
-        
-        // Random delay between 1440-1450 minutes (24 hours variation)
-        const delayMinutes = Math.floor(Math.random() * (1450 - 1440 + 1)) + 1440;
-        const delayMs = delayMinutes * 60 * 1000;
-        
-        console.log(`Waiting for ${delayMinutes} minutes before the next cycle...`);
-        for (let i = delayMinutes; i > 0; i--) {
-            for (let j = 59; j >= 0; j--) {
-                process.stdout.clearLine(0);
-                process.stdout.cursorTo(0);
-                process.stdout.write(`Time remaining: ${i} minutes ${j} seconds `);
-                await delay(1000);
+    function getActions(wallet) {
+        return [
+            async () => {
+                let nonce = await provider.getTransactionCount(wallet.address, "pending");
+                try {
+                    await wrapMON(wallet, getRandomAmount(0.003, 0.005), nonce++);
+                    await delay(10000);
+                } catch (error) {
+                    console.error("❌ Wrap failed:", error.message);
+                }
+                await delay(5000);
+                try {
+                    await unwrapMON(wallet, getRandomAmount(0.001, 0.002), nonce++);
+                    await delay(10000);
+                } catch (error) {
+                    console.error("❌ Unwrap failed:", error.message);
+                }
+            },
+            async () => {
+                const swapFunctions = [swapUniswap, swapTaya];
+                for (let i = 0; i < 6; i++) {
+                    const swapFunction = swapFunctions[Math.floor(Math.random() * swapFunctions.length)];
+                    await swapFunction(wallet);
+                    await delay(5000);
+                }
+            },
+            async () => {
+                const stakingActions = [
+                    [stakeMagmaMON, unstakeMagmaMON],
+                    [stakeAprioMON, requestUnstakeAprMON],
+                    [stakeKintsuMON, unstakeKintsuMON],
+                    [stakeSHMonad, unstakeSHMonad]
+                ];
+                const selectedStaking = stakingActions.sort(() => 0.5 - Math.random()).slice(0, 2);
+                for (const [stake, unstake] of selectedStaking) {
+                    await stake(wallet);
+                    await delay(5000);
+                    await unstake(wallet);
+                    await delay(5000);
+                }
             }
+        ];
+    }
+
+    for (const wallet of wallets) {
+        const actions = getActions(wallet);
+        console.log(`\n[${wallet.address}] Starting daily routine...`);
+        
+        actions.sort(() => 0.5 - Math.random());
+        for (const action of actions) {
+            await action();
         }
-        console.log('Continuing to next cycle...');
-        for (let i = delayMinutes; i > 0; i--) {
-            process.stdout.write(`
-Time remaining: ${i} minutes `);
-            await delay(60000);
-        }
-        console.log('Resuming execution...');
-        await delay(delayMs);
+        
+        console.log(`\n[${wallet.address}] Daily routine completed! Waiting for next cycle...`);
     }
 }
 
-repeatMain();
+async function startBot() {
+    while (true) {
+        await main();
+        const waitTime = parseInt((Math.random() * (1450 - 1440) + 1440) * 60 * 1000);
+        const balance = await provider.getBalance(wallets[0].address);
+        console.log(`\n💰 Current MON Balance: ${ethers.formatEther(balance)} MON`);
+        const currentDate = new Date().toLocaleString();
+        console.log(`
+⏳ Waiting ${waitTime / 60000} minutes for next cycle...`);
+        console.log(`📅 Next run at: ${currentDate}`);
+        await delay(waitTime);
+    }
+}
+
+startBot();
