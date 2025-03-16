@@ -78,8 +78,7 @@ async function startBot() {
             const balance = await provider.getBalance(wallet.address);
             return { address: wallet.address, balance: ethers.formatEther(balance) };
         }));
-        console.log("
-💰 Wallet Balances:");
+        console.log(`\n💰 Wallet Balances:`);
         balances.forEach(({ address, balance }) => {
             console.log(`[${address}] ${balance} MON`);
         });
