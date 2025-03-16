@@ -74,8 +74,15 @@ async function startBot() {
     while (true) {
         await main();
         const waitTime = parseInt((Math.random() * (1450 - 1440) + 1440) * 60 * 1000);
-        const balance = await provider.getBalance(wallets[0].address);
-        console.log(`\n💰 Current MON Balance: ${ethers.formatEther(balance)} MON`);
+        const balances = await Promise.all(wallets.map(async (wallet) => {
+            const balance = await provider.getBalance(wallet.address);
+            return { address: wallet.address, balance: ethers.formatEther(balance) };
+        }));
+        console.log("
+💰 Wallet Balances:");
+        balances.forEach(({ address, balance }) => {
+            console.log(`[${address}] ${balance} MON`);
+        });
         const currentDate = new Date().toLocaleString();
         console.log(`
 ⏳ Waiting ${waitTime / 60000} minutes for next cycle...`);
