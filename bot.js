@@ -75,5 +75,5 @@ const runAllClaims = async () => {
 runAllClaims();
 
 // Interval: 30 seconds
-const interval = 30 * 1000;
+const interval = (3 * 60 + 1) * 60 * 1000; // 3 hours and 1 minute in milliseconds
 setInterval(runAllClaims, interval);
