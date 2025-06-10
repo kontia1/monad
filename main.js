@@ -33,28 +33,26 @@ async function main() {
             },
             async () => {
                 const swapFunctions = [swapUniswap, swapTaya];
-                for (let i = 0; i < 6; i++) {
+                for (let i = 0; i < 2; i++) {
                     const swapFunction = swapFunctions[Math.floor(Math.random() * swapFunctions.length)];
                     await swapFunction(wallet);
                     await delay(5000);
                 }
             },
-            async () => {
-                const stakingActions = [
-                    [stakeMagmaMON, unstakeMagmaMON],
-                    [stakeAprioMON, requestUnstakeAprMON],
-                    [stakeKintsuMON, unstakeKintsuMON],
-                    [stakeSHMonad, unstakeSHMonad]
-                ];
-                const selectedStaking = stakingActions.sort(() => 0.5 - Math.random()).slice(0, 2);
-                for (const [stake, unstake] of selectedStaking) {
-                    await stake(wallet);
-                    await delay(5000);
-                    await unstake(wallet);
-                    await delay(5000);
-                }
-            }
-        ];
+                async () => {
+            const stakingActions = [
+                [stakeMagmaMON, unstakeMagmaMON],
+                [stakeAprioMON, requestUnstakeAprMON],
+                [stakeKintsuMON, unstakeKintsuMON],
+                [stakeSHMonad, unstakeSHMonad]
+            ];
+            const [stake, unstake] = stakingActions[Math.floor(Math.random() * stakingActions.length)]; // 🎯 Only one pair
+            await stake(wallet);
+            await delay(5000);
+            await unstake(wallet);
+            await delay(5000);
+        }
+    ];
     }
 
     for (const wallet of wallets) {
